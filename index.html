@@ -9,41 +9,8 @@
 
 <body>
   <div class="container">
-    <ul class="comments">
-      <li class="comment">
-        <div class="comment-header">
-          <div>Глеб Фокин</div>
-          <div>12.02.22 12:18</div>
-        </div>
-        <div class="comment-body">
-          <div class="comment-text">
-            Это будет первый комментарий на этой странице
-          </div>
-        </div>
-        <div class="comment-footer">
-          <div class="likes">
-            <span class="likes-counter">3</span>
-            <button class="like-button"></button>
-          </div>
-        </div>
-      </li>
-      <li class="comment">
-        <div class="comment-header">
-          <div>Варвара Н.</div>
-          <div>13.02.22 19:22</div>
-        </div>
-        <div class="comment-body">
-          <div class="comment-text">
-            Мне нравится как оформлена эта страница! ❤
-          </div>
-        </div>
-        <div class="comment-footer">
-          <div class="likes">
-            <span class="likes-counter">75</span>
-            <button class="like-button -active-like"></button>
-          </div>
-        </div>
-      </li>
+    <ul class="comments" id="list">
+      <!-- Список рендерится из JS -->
     </ul>
     <div class="add-form">
       <input id="name-input" type="text" value="" class="add-form-name" placeholder="Введите ваше имя" />
@@ -57,17 +24,33 @@
 </body>
 
 <script>
-    "use strict";
+  "use strict";
 
-    const buttonElement = document.getElementById('add-button');
-    const nameInputElement = document.getElementById('name-input');
-    const textInputElement = document.getElementById('text-input');
-    const commentsElement = document.querySelector('.comments');
+  const buttonElement = document.getElementById('add-button');
+  const nameInputElement = document.getElementById('name-input');
+  const textInputElement = document.getElementById('text-input');
+  const listElement = document.getElementById('list');
 
-    function clock() {
-      let currentDate = new Date().toLocaleDateString([], {day: "2-digit", month: "2-digit", year: "2-digit"}) + " " + new Date().toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
-      return currentDate;
-    };
+  const users = [
+    {
+      name: 'Глеб Фокин',
+      date: '12.02.22 12:18',
+      comment: 'Это будет первый комментарий на этой странице',
+      likes: 3,
+      isLiked: false,
+    },
+    {
+      name: 'Варвара Н.',
+      date: '13.02.22 19:22',
+      comment: 'Мне нравится как оформлена эта страница! ❤',
+      likes: 75,
+      isLiked: true,
+    },
+  ];
+
+  const renderUsers = () => {
+    const usersHtml = users
+      .map((user, index) =>
 
     function addComment() {
       nameInputElement.classList.remove('error');
@@ -87,42 +70,129 @@
 
       let oldComments = commentsElement.innerHTML;
       commentsElement.innerHTML = oldComments +
-        `<li class="comment"> 
-            <div class="comment-header"> 
-              <div>${nameInputElement.value}</div> 
-              <div>${clock()}</div> 
-            </div> 
-            <div class="comment-body"> 
-              <div class="comment-text"> 
-                ${textInputElement.value} 
-              </div> 
-            </div> 
-            <div class="comment-footer"> 
-              <div class="likes"> 
-                <span class="likes-counter">0</span> 
-                <button class="like-button"></button> 
-              </div> 
-            </div> 
-          </li>`;
 
+        `<li class="comment"> 
+          <div class="comment-header"> 
+            <div>${user.name}</div> 
+            <div>${user.date}</div> 
+          </div> 
+          <div data-text="${user.comment}" class="comment-body"> 
+            <div class="comment-text">${user.comment}</div> 
+          </div> 
+          <div class="comment-footer"> 
+            <div class="likes"> 
+              <span class="likes-counter">${user.likes}</span> 
+              <button data-like="${user.likes}" data-index="${index}" class="like-button ${users[index].isLiked ? '-active-like' : 'like-button'}"></button> 
+            </div> 
+          </div> 
+        </li>`
+      )
+      .join('');
+
+    listElement.innerHTML = usersHtml;
+
+    initLikeButtonListeners();
+  };
+
+  const initLikeButtonListeners = () => {
+    const buttonElements = document.querySelectorAll('.like-button');
+
+    for (const buttonElement of buttonElements) {
+
+      const index = buttonElement.dataset.index;
+      const counter = buttonElement.dataset.like;
+
+      buttonElement.addEventListener('click', () => {
+
+        if (users[index].isLiked === false) {
+
+          const result = Number(counter) + 1;
+          users[index].likes = result;
+
+          users[index].isLiked = true;
+        } else if (users[index].isLiked === true) {
+
+          const result = Number(counter) - 1;
+          users[index].likes = result;
+
+          users[index].isLiked = false;
+        }
+
+        renderUsers();
+      });
+    };
+  };
+
+  renderUsers();
+
+  buttonElement.disabled = true;
+  nameInputElement.addEventListener('input', updateValue);
+  textInputElement.addEventListener('input', updateValue);
+
+  function updateValue() {
+    if (nameInputElement.value !== '' && textInputElement.value !== '') {
+      buttonElement.disabled = false;
+    } else {
+      buttonElement.disabled = true;
+    }
+  }
+
+  updateValue();
+  renderUsers();
+
+  nameInputElement.addEventListener('keyup', keyEvent);
+  textInputElement.addEventListener('keyup', keyEvent);
+
+  function keyEvent(e) {
+    if (e.code === 'Enter') {
+      buttonElement.dispatchEvent(new Event('click'));
+    }
+  }
+
+  buttonElement.addEventListener('click', () => {
+    nameInputElement.classList.remove('error');
+    textInputElement.classList.remove('error');
+    buttonElement.classList.remove('add-form-button-inactive');
+
+    if (nameInputElement.value === '' || !nameInputElement.value.trim()) {
+      nameInputElement.classList.add('error');
       nameInputElement.value = '';
-      textInputElement.value = ''; 
+      buttonElement.classList.add('add-form-button-inactive');
+      return;
+
+    } else if (textInputElement.value === '' || !textInputElement.value.trim()) {
+      textInputElement.classList.add('error');
+      buttonElement.classList.add('add-form-button-inactive');
+      return;
     };
 
-    buttonElement.addEventListener('click', () => {
-    addComment()
+    const date = new Date();
+    const options = {
+      year: '2-digit',
+      month: 'numeric',
+      day: 'numeric',
+    };
+    const optionsTime = {
+      hour: 'numeric',
+      minute: 'numeric',
+    };
+
+    const dateTime = `${date.toLocaleDateString('ru-RU', options)} ${date.toLocaleTimeString('ru-RU', optionsTime)}`;
+
+    users.push({
+      name: nameInputElement.value,
+      date: dateTime,
+      comment: textInputElement.value,
+      likes: 0,
+      isLiked: false,
     });
 
-    nameInputElement.addEventListener('keyup', keyEvent);
-    textInputElement.addEventListener('keyup', keyEvent);
+    renderUsers();
+    nameInputElement.value = '';
+    textInputElement.value = '';
+  });
 
-    function keyEvent(e) {
-      if (e.code === 'Enter') {
-        buttonElement.dispatchEvent(new Event('click'));
-      }
-    }
-
-    console.log("It works!");
-  </script>
+  console.log("It works!");
+</script>
 
 </html>
