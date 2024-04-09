@@ -9,9 +9,11 @@
 
 <body>
   <div class="container">
+    <div class="loading" id="loading-status">Комментарии загружаются...</div>
     <ul class="comments" id="list">
       <!-- Список рендерится из JS -->
     </ul>
+    <p class="loading" id="loading-new">Комментарий добавляется...</p>
     <div class="add-form">
       <input id="name-input" type="text" value="" class="add-form-name" placeholder="Введите ваше имя" />
       <textarea id="text-input" class="add-form-text" placeholder="Введите ваш комментарий"
@@ -19,6 +21,9 @@
       <div class="add-form-row">
         <button id="add-button" class="add-form-button">Написать</button>
       </div>
+    </div>
+    <div class="addComment" id="addComment-status">
+
     </div>
   </div>
 </body>
@@ -45,47 +50,87 @@
     return `${date.toLocaleDateString('ru-RU', options)} ${date.toLocaleTimeString('ru-RU', optionsTime)}`;
   }
 
-  // Подключаем API. Задача: Получить список комментариев
-  // console.log(date)
+
   function getComments() {
     fetch("https://wedev-api.sky.pro/api/v1/maria_bobrova/comments", {
       method: "GET"
     })
-    .then((response) => response.json())
-    .then((responseData) => {
-      users = responseData.comments.map((comment) => {
-        const date = new Date(comment.date);
-        console.log(date)
-        return {
-          name: comment.author.name,
-          date: getDate(date),
-          comment: comment.text,
-          likes: comment.likes,
-          isLiked: comment.isLiked,
-        }
-      });
-      renderUsers();
-    });
+      .then((response) => {
+        return response.json();
+      })
+      .then((responseData) => {
+        users = responseData.comments.map((comment) => {
+          const dateFromServer = new Date(comment.date);
+          console.log(dateFromServer);
 
+          return {
+            name: comment.author.name,
+            date: getDate(dateFromServer),
+            comment: comment.text,
+            likes: comment.likes,
+            isLiked: comment.isLiked,
+          }
+        });
+
+        renderUsers();
+        document.getElementById('loading-status').classList.add("hidden");
+      })
+      .finally(() => {
+        const element = document.getElementById('loading-new')
+
+        if (element.classList.contains('hidden'))
+          return
+
+        document.getElementById('addComment-status').classList.add("hidden");
+        document.querySelector('.add-form').classList.remove('hidden');
+        element.classList.add('hidden');
+        updateValue();
+      })
   }
+
+  function sendComment(name, text) {
+    
+    document.getElementById('addComment-status');
+    document.querySelector('.add-form').classList.add('hidden');
+    document.getElementById('loading-new').classList.remove('hidden');
+
+    fetch("https://wedev-api.sky.pro/api/v1/maria_bobrova/comments", {
+      method: "POST",
+      body: JSON.stringify({
+        name: name
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;"),
+        date: getDate(new Date()),
+        text: text
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("\n", "<br>"),
+        likes: 0,
+        isLiked: false,
+      }),
+      header: { 'Content-Type': 'application/json' },
+    })
+      .then((response) => {
+        if (response.status !== 201)
+          return;
+
+        getComments();
+        nameInputElement.value = '';
+        textInputElement.value = '';
+
+        buttonElement.disabled = false;
+
+      })
+      .catch((error) => console.log(error))
+  }
+
   getComments()
 
-  let users = [
-    // {
-    //   name: 'Глеб Фокин',
-    //   date: '12.02.22 12:18',
-    //   comment: 'Это будет первый комментарий на этой странице',
-    //   likes: 3,
-    //   isLiked: false,
-    // },
-    // {
-    //   name: 'Варвара Н.',
-    //   date: '13.02.22 19:22',
-    //   comment: 'Мне нравится как оформлена эта страница! ❤',
-    //   likes: 75,
-    //   isLiked: true,
-    // },
-  ];
+  let users = [];
 
   const renderUsers = () => {
     const usersHtml = users
@@ -101,7 +146,7 @@
           <div class="comment-footer">
             <div class="likes">
               <span class="likes-counter">${user.likes}</span>
-              <button data-like="${user.likes}" data-index="${index}" class="like-button ${users[index].isLiked ? '-active-like' : 'like-button'}"></button>
+              <button data-like="${user.likes}" data-index="${index}" class="like-button ${user.isLiked ? '-active-like' : 'like-button'}"></button>
             </div>
           </div>
         </li>`
@@ -160,6 +205,7 @@
 
   renderUsers();
 
+  document.getElementById('loading-new').classList.add('hidden');
   buttonElement.disabled = true;
   nameInputElement.addEventListener('input', updateValue);
   textInputElement.addEventListener('input', updateValue);
@@ -185,6 +231,7 @@
   }
 
   buttonElement.addEventListener('click', () => {
+
     nameInputElement.classList.remove('error');
     textInputElement.classList.remove('error');
     buttonElement.classList.remove('add-form-button-inactive');
@@ -201,61 +248,7 @@
       return;
     }
 
-    // const date = new Date();
-    // const dateTime = getDate(date);
-    // const dateTime = getDate(new Date());
-
-    fetch("https://wedev-api.sky.pro/api/v1/maria_bobrova/comments", {
-      method: "POST",
-      body: JSON.stringify({
-        name: nameInputElement.value
-                .replaceAll("&", "&amp;")
-                .replaceAll("<", "&lt;")
-                .replaceAll(">", "&gt;")
-                .replaceAll('"', "&quot;"),
-        // date: dateTime,
-        date: getDate(new Date()),
-        text: textInputElement.value
-                .replaceAll("&", "&amp;")
-                .replaceAll("<", "&lt;")
-                .replaceAll(">", "&gt;")
-                .replaceAll('"', "&quot;")
-                .replaceAll("\n", "<br>"),
-        likes: 0,
-        isLiked: false,
-      }),
-      header: { 'Content-Type': 'application/json' },
-    }).then((response) => {
-      if (response.status !== 201)
-        return
-
-      getComments()
-      renderUsers()
-      nameInputElement.value = '';
-      textInputElement.value = '';
-    }).catch((error) => console.log(error))
-
-    // users.push({
-    //   name: nameInputElement.value
-    //     .replaceAll("&", "&amp;")
-    //     .replaceAll("<", "&lt;")
-    //     .replaceAll(">", "&gt;")
-    //     .replaceAll('"', "&quot;"),
-    //   // date: dateTime,
-    //   date: getDate(new Date()),
-    //   comment: textInputElement.value
-    //     .replaceAll("&", "&amp;")
-    //     .replaceAll("<", "&lt;")
-    //     .replaceAll(">", "&gt;")
-    //     .replaceAll('"', "&quot;")
-    //     .replaceAll("\n", "<br>"),
-    //   likes: 0,
-    //   isLiked: false,
-    // });
-
-    // renderUsers();
-    // nameInputElement.value = '';
-    // textInputElement.value = '';
+    sendComment(nameInputElement.value, textInputElement.value);
   });
 
   console.log("It works!");
