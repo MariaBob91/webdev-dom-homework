@@ -52,7 +52,7 @@
 
 
   function getComments() {
-    fetch("https://wedev-api.sky.pro/api/v1/maria_bobrova/comments", {
+    return fetch("https://wedev-api.sky.pro/api/v1/maria_bobrova/comments", {
       method: "GET"
     })
       .then((response) => {
@@ -86,13 +86,21 @@
         element.classList.add('hidden');
         updateValue();
       })
+      .catch(error => {
+        console.error("Ошибка загрузки комментариев:", error);
+        alert('Ошибка загрузки комментариев');
+      })
   }
 
   function sendComment(name, text) {
+    let status = 0
     
+    const formElement = document.querySelector('.add-form')
+    const loader = document.getElementById('loading-new')
+    formElement.classList.add('hidden')
+    loader.classList.remove('hidden')
+
     document.getElementById('addComment-status');
-    document.querySelector('.add-form').classList.add('hidden');
-    document.getElementById('loading-new').classList.remove('hidden');
 
     fetch("https://wedev-api.sky.pro/api/v1/maria_bobrova/comments", {
       method: "POST",
@@ -102,21 +110,25 @@
                 .replaceAll("<", "&lt;")
                 .replaceAll(">", "&gt;")
                 .replaceAll('"', "&quot;"),
-        date: getDate(new Date()),
         text: text
                 .replaceAll("&", "&amp;")
                 .replaceAll("<", "&lt;")
                 .replaceAll(">", "&gt;")
                 .replaceAll('"', "&quot;")
                 .replaceAll("\n", "<br>"),
-        likes: 0,
-        isLiked: false,
+        forceError: true,
       }),
       header: { 'Content-Type': 'application/json' },
     })
       .then((response) => {
-        if (response.status !== 201)
-          return;
+        status = response.status
+
+        return response.json()
+      })
+      .then((responseData) => {
+        if (status !== 201) {
+          throw new Error(responseData.error)
+        }  
 
         getComments();
         nameInputElement.value = '';
@@ -125,7 +137,16 @@
         buttonElement.disabled = false;
 
       })
-      .catch((error) => console.log(error))
+      .catch((error) => {
+        if (error.message === 'Failed to fetch') {
+          alert("Кажется, сломался интернет. Попробуйте позже");
+        } else {
+          alert(error.message)
+        }
+
+        loader.classList.add('hidden')
+        formElement.classList.remove('hidden')
+      })
   }
 
   getComments()
@@ -203,8 +224,6 @@
     }
   };
 
-  renderUsers();
-
   document.getElementById('loading-new').classList.add('hidden');
   buttonElement.disabled = true;
   nameInputElement.addEventListener('input', updateValue);
@@ -219,7 +238,6 @@
   }
 
   updateValue();
-  renderUsers();
 
   nameInputElement.addEventListener('keyup', keyEvent);
   textInputElement.addEventListener('keyup', keyEvent);
