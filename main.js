@@ -252,17 +252,17 @@
 
     nameInputElement.classList.remove('error');
     textInputElement.classList.remove('error');
-    buttonElement.disabled = false;
+    buttonElement.classList.remove('add-form-button-inactive');
 
     if (nameInputElement.value === '' || !nameInputElement.value.trim()) {
       nameInputElement.classList.add('error');
       nameInputElement.value = '';
-      buttonElement.disabled = true;
+      buttonElement.classList.add('add-form-button-inactive');
       return;
 
     } else if (textInputElement.value === '' || !textInputElement.value.trim()) {
       textInputElement.classList.add('error');
-      buttonElement.disabled = true;
+      buttonElement.classList.add('add-form-button-inactive');
       return;
     }
 
