@@ -184,8 +184,14 @@ a:hover {
   opacity: 1;
 }
 
+.input-form,
+.textArea-form,
+.textArea-form_pass {
+  border: 2px solid transparent;
+}
+
 .error {
-  border:1px solid red;
+  border: 2px solid red;
 }
 
 .hidden {

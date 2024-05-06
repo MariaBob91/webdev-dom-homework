@@ -44,7 +44,7 @@ export const DOM = {
             .finally(() => {
                 const element = document.getElementById('loading-new')
 
-                if (element.classList.contains('hidden'))
+                if (!element || element.classList.contains('hidden'))
                     return
 
                 document.getElementById('addComment-status').classList.add("hidden");
@@ -252,26 +252,48 @@ export const DOM = {
 
                 this.sendComment(this.nameInputElement.value, this.textInputElement.value);
             })
-        } else {
+        } else { // authorization form
             const loginInput = document.getElementById("login-input");
             const passwordInput = document.getElementById("password-input");
 
-            this.authButtonElement.addEventListener('click', () => {
-                // this.loginInput.classList.remove('error');
-                // this.passwordInput.classList.remove('error');
-                // this.authButtonElement.disabled = false;
-                
-                // if (this.loginInput.value === '' || !this.loginInput.value.trim()) {
-                //     this.loginInput.classList.add('error');
-                //     this.loginInput.value = '';
-                //     this.authButtonElement.disabled = true;
-                //     return;
+            const keyEvent = () => {
+                const isLoginEmpty = loginInput.value.trim() === ""
+                const isPasswordEmpty = passwordInput.value.trim() === ""
 
-                // } else if (this.passwordInput.value === '' || !this.passwordInput.value.trim()) {
-                //     this.passwordInput.classList.add('error');
-                //     this.authButtonElement.disabled = true;
-                //     return;
-                // }
+                if (isLoginEmpty || isPasswordEmpty) {
+                    this.authButtonElement.disabled = true
+
+                    if (isLoginEmpty)
+                        loginInput.classList.add('error');
+                    if (isPasswordEmpty)
+                        passwordInput.classList.add('error');
+                }
+                else {
+                    this.authButtonElement.disabled = false
+                    loginInput.classList.remove('error');
+                    passwordInput.classList.remove('error');
+                }
+            }
+
+            loginInput.addEventListener('keyup', keyEvent);
+            passwordInput.addEventListener('keyup', keyEvent);
+
+            this.authButtonElement.addEventListener('click', () => {
+                loginInput.classList.remove('error');
+                passwordInput.classList.remove('error');
+                this.authButtonElement.disabled = false;
+                
+                if (loginInput.value.trim() === "") {
+                    loginInput.classList.add('error');
+                    loginInput.value = '';
+                    this.authButtonElement.disabled = true;
+                    return;
+
+                } else if (passwordInput.value.trim() === "") {
+                    passwordInput.classList.add('error');
+                    this.authButtonElement.disabled = true;
+                    return;
+                }
 
                 API.signIn(loginInput.value, passwordInput.value)
                     .then(() => {
