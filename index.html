@@ -4,27 +4,12 @@
 <head>
   <title>Проект "Комменты"</title>
   <meta charset="utf-8" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
   <div class="container">
     <div class="loading" id="loading-status">Комментарии загружаются...</div>
-    <ul class="comments" id="list">
-      <!-- Список рендерится из JS -->
-    </ul>
-    <p class="loading" id="loading-new">Комментарий добавляется...</p>
-    <div class="add-form">
-      <input id="name-input" type="text" value="" class="add-form-name" placeholder="Введите ваше имя" />
-      <textarea id="text-input" class="add-form-text" placeholder="Введите ваш комментарий"
-        rows="4"></textarea>
-      <div class="add-form-row">
-        <button id="add-button" class="add-form-button">Написать</button>
-      </div>
-    </div>
-    <div class="addComment" id="addComment-status">
-
-    </div>
   </div>
 
   <script type="module" src="./main.js"></script>

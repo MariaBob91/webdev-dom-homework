@@ -2,12 +2,19 @@ import { API } from "./api.js";
 import { getDate } from "./util.js";
 
 export const DOM = {
+    container: document.querySelector('.container'),
     buttonElement: document.getElementById('add-button'),
+    authButtonElement: document.getElementById('auth-button'),
     nameInputElement: document.getElementById('name-input'),
     textInputElement: document.getElementById('text-input'),
     listElement: document.getElementById('list'),
 
     users: [],
+
+    state: {
+        waitingUser: true,
+        loginUser: false,
+    },
 
 
     getComments() {
@@ -26,8 +33,13 @@ export const DOM = {
                     }
                 });
 
-                this.renderUsers();
-                document.getElementById('loading-status').classList.add("hidden");
+                this.renderApp();
+                const el = document.getElementById('loading-new')
+                document.getElementById('loading-new')?.classList.add("hidden");
+            })
+            .catch(error => {
+                console.error("Ошибка загрузки комментариев:", error);
+                alert('Ошибка загрузки комментариев');
             })
             .finally(() => {
                 const element = document.getElementById('loading-new')
@@ -39,10 +51,6 @@ export const DOM = {
                 document.querySelector('.add-form').classList.remove('hidden');
                 element.classList.add('hidden');
                 this.updateValue();
-            })
-            .catch(error => {
-                console.error("Ошибка загрузки комментариев:", error);
-                alert('Ошибка загрузки комментариев');
             })
     },
 
@@ -76,31 +84,77 @@ export const DOM = {
     },
 
 
-    renderUsers() {
-        const usersHtml = this.users
+    renderApp() {
+        const parts = []
+
+        if (this.state.loginUser) {
+            parts.push(`<div class="auth-form">
+                <input id="login-input" type="text" value="" class="input-form" placeholder="Введите логин" />
+                <input id="password-input" type="password" class="textArea-form_pass" placeholder="Введите пароль">
+                <div class="add-form-row add-form-row--center">
+                    <button id="auth-button" class="add-form-button">Авторизоваться</button>
+                </div>
+            </div>
+            <p><a href="#" id="auth-link">Вернуться к комментариям</a></p>`)
+        } else {
+            parts.push(`<ul class="comments" id="list">`)
+            parts.push(...this.getCommentItems())
+            parts.push(`</ul>`)
+
+            if (this.state.waitingUser) {
+                parts.push(`<p>Чтобы добавить комментарий, <a href="#" id="auth-link">авторизуйтесь</a></p>`)
+            } else {
+                parts.push(`<p class="loading hidden" id="loading-new">Комментарий добавляется...</p>
+                <div class="add-form">
+                    <input id="name-input" type="text" value="${API.userName}" disabled class="input-form" placeholder="Введите ваше имя" />
+                    <textarea id="text-input" class="textArea-form" placeholder="Введите ваш комментарий"
+                        rows="4"></textarea>
+                    <div class="add-form-row">
+                        <button id="add-button" class="add-form-button">Написать</button>
+                    </div>
+                </div>`)
+            }
+        }
+
+        this.container.innerHTML = parts.join('')
+
+        document.getElementById("auth-link")?.addEventListener("click", () => {
+            if (this.state.loginUser)
+                this.state.loginUser = false
+            else
+                this.state.loginUser = true
+
+            this.renderApp()
+        })
+
+        if (!this.state.waitingUser || this.state.loginUser)
+            this.handleListeners()
+
+        if (!this.state.loginUser) {
+            this.initLikeButtonListeners()
+            this.initAnswerComment()
+        }
+    },
+
+    getCommentItems() {
+        return this.users
             .map((user, index) =>
                 `<li class="comment" data-index="${index}">
-          <div class="comment-header">
-            <div>${user.name}</div>
-            <div>${user.date}</div>
-          </div>
-          <div data-text="${user.comment}" class="comment-body">
-            <div class="comment-text">${user.comment}</div>
-          </div>
-          <div class="comment-footer">
-            <div class="likes">
-              <span class="likes-counter">${user.likes}</span>
-              <button data-like="${user.likes}" data-index="${index}" class="like-button ${user.isLiked ? '-active-like' : 'like-button'}"></button>
-            </div>
-          </div>
-        </li>`
-            )
-            .join('');
-
-        this.listElement.innerHTML = usersHtml;
-
-        this.initLikeButtonListeners();
-        this.initAnswerComment();
+                    <div class="comment-header">
+                        <div>${user.name}</div>
+                        <div>${user.date}</div>
+                    </div>
+                    <div data-text="${user.comment}" class="comment-body">
+                        <div class="comment-text">${user.comment}</div>
+                    </div>
+                    <div class="comment-footer">
+                        <div class="likes">
+                        <span class="likes-counter">${user.likes}</span>
+                        <button data-like="${user.likes}" data-index="${index}" class="like-button ${user.isLiked ? '-active-like' : 'like-button'}"></button>
+                        </div>
+                    </div>
+                </li>`
+        )
     },
 
     initAnswerComment() {
@@ -142,7 +196,7 @@ export const DOM = {
                     this.users[index].isLiked = false;
                 }
 
-                this.renderUsers();
+                this.renderApp()
             });
         }
     },
@@ -162,42 +216,79 @@ export const DOM = {
     },
 
     handleListeners() {
+        this.buttonElement = document.getElementById('add-button');
+        this.authButtonElement = document.getElementById('auth-button');
+        this.nameInputElement = document.getElementById('name-input');
+        this.textInputElement = document.getElementById('text-input');
+        this.listElement = document.getElementById('list');
 
-        document.getElementById('loading-new').classList.add('hidden');
-        this.buttonElement.disabled = true;
-        this.nameInputElement.addEventListener('input', this.updateValue);
-        this.textInputElement.addEventListener('input', this.updateValue);
+        if (this.buttonElement) {
+            this.buttonElement.disabled = true;
+            this.nameInputElement.addEventListener('input', this.updateValue);
+            this.textInputElement.addEventListener('input', this.updateValue);
 
-        this.updateValue();
+            this.updateValue();
 
-        this.nameInputElement.addEventListener('keyup', this.keyEvent);
-        this.textInputElement.addEventListener('keyup', this.keyEvent);
+            this.nameInputElement.addEventListener('keyup', this.keyEvent);
+            this.textInputElement.addEventListener('keyup', this.keyEvent);
 
-        this.buttonElement.addEventListener('click', () => {
+            this.buttonElement.addEventListener('click', () => {
 
-            this.nameInputElement.classList.remove('error');
-            this.textInputElement.classList.remove('error');
-            this.buttonElement.disabled = false;
+                this.nameInputElement.classList.remove('error');
+                this.textInputElement.classList.remove('error');
+                this.buttonElement.disabled = false;
 
-            if (this.nameInputElement.value === '' || !this.nameInputElement.value.trim()) {
-                this.nameInputElement.classList.add('error');
-                this.nameInputElement.value = '';
-                this.buttonElement.disabled = true;
-                return;
+                if (this.nameInputElement.value === '' || !this.nameInputElement.value.trim()) {
+                    this.nameInputElement.classList.add('error');
+                    this.nameInputElement.value = '';
+                    this.buttonElement.disabled = true;
+                    return;
 
-            } else if (this.textInputElement.value === '' || !this.textInputElement.value.trim()) {
-                this.textInputElement.classList.add('error');
-                this.buttonElement.disabled = true;
-                return;
-            }
+                } else if (this.textInputElement.value === '' || !this.textInputElement.value.trim()) {
+                    this.textInputElement.classList.add('error');
+                    this.buttonElement.disabled = true;
+                    return;
+                }
 
-            this.sendComment(this.nameInputElement.value, this.textInputElement.value);
-        })
+                this.sendComment(this.nameInputElement.value, this.textInputElement.value);
+            })
+        } else {
+            const loginInput = document.getElementById("login-input");
+            const passwordInput = document.getElementById("password-input");
+
+            this.authButtonElement.addEventListener('click', () => {
+                // this.loginInput.classList.remove('error');
+                // this.passwordInput.classList.remove('error');
+                // this.authButtonElement.disabled = false;
+                
+                // if (this.loginInput.value === '' || !this.loginInput.value.trim()) {
+                //     this.loginInput.classList.add('error');
+                //     this.loginInput.value = '';
+                //     this.authButtonElement.disabled = true;
+                //     return;
+
+                // } else if (this.passwordInput.value === '' || !this.passwordInput.value.trim()) {
+                //     this.passwordInput.classList.add('error');
+                //     this.authButtonElement.disabled = true;
+                //     return;
+                // }
+
+                API.signIn(loginInput.value, passwordInput.value)
+                    .then(() => {
+                        if (!API.token)
+                            return;
+
+                        this.state.waitingUser = false;
+                        this.state.loginUser   = false;
+
+                        this.renderApp()
+                    })
+            })
+        }
     },
 
     start() {
         this.getComments()
-        this.handleListeners()
         console.log("It works!");
     },
 }
