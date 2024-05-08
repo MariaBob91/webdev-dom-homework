@@ -35,6 +35,12 @@ export const API = {
 
                 return responseData;
             })
+            .catch((error) => {
+                if (error === "Failed to fetch")
+                    alert("Проверьте интернет-соединение")
+                else
+                    alert(error.message)
+            })
     },
 
     getCommentsFromServer() {

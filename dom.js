@@ -10,6 +10,7 @@ export const DOM = {
     listElement: document.getElementById('list'),
 
     users: [],
+    userComment: "",
 
     state: {
         waitingUser: true,
@@ -34,7 +35,7 @@ export const DOM = {
                 });
 
                 this.renderApp();
-                const el = document.getElementById('loading-new')
+
                 document.getElementById('loading-new')?.classList.add("hidden");
             })
             .catch(error => {
@@ -108,12 +109,14 @@ export const DOM = {
                 <div class="add-form">
                     <input id="name-input" type="text" value="${API.userName}" disabled class="input-form" placeholder="Введите ваше имя" />
                     <textarea id="text-input" class="textArea-form" placeholder="Введите ваш комментарий"
-                        rows="4"></textarea>
+                        rows="4">${this.userComment}</textarea>
                     <div class="add-form-row">
                         <button id="add-button" class="add-form-button">Написать</button>
                     </div>
                 </div>`)
             }
+
+            this.userComment = ""
         }
 
         this.container.innerHTML = parts.join('')
@@ -162,6 +165,9 @@ export const DOM = {
         const textInputElement = document.getElementById('text-input');
         for (const comment of commentsElements) {
             comment.addEventListener('click', () => {
+                if (this.state.waitingUser)
+                    return
+
                 const indexComment = comment.dataset.index;
                 const currentComment = this.users[indexComment].comment;
                 const currentCommentName = this.users[indexComment].name;
@@ -175,21 +181,23 @@ export const DOM = {
         const buttonElements = document.querySelectorAll('.like-button');
 
         for (const buttonElement of buttonElements) {
-
             const index = buttonElement.dataset.index;
             const counter = buttonElement.dataset.like;
 
             buttonElement.addEventListener('click', (event) => {
                 event.stopPropagation();
 
-                if (this.users[index].isLiked === false) {
+                if (this.state.waitingUser)
+                    return
 
+                this.userComment = this.textInputElement.value
+
+                if (this.users[index].isLiked === false) {
                     const result = Number(counter) + 1;
                     this.users[index].likes = result;
 
                     this.users[index].isLiked = true;
                 } else if (this.users[index].isLiked === true) {
-
                     const result = Number(counter) - 1;
                     this.users[index].likes = result;
 
