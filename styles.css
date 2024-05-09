@@ -2,6 +2,14 @@ body {
   margin: 0;
 }
 
+a, a:hover, a:visited {
+  color: #ffffff;
+}
+
+a:hover {
+  text-decoration: none;
+}
+
 .container {
   font-family: "Helvetica", sans-serif;
   color: #ffffff;
@@ -24,6 +32,18 @@ body {
 .comment,
 .add-form {
   width: 596px;
+  box-sizing: border-box;
+  background: radial-gradient(
+    75.42% 75.42% at 50% 42.37%,
+    rgba(53, 53, 53, 0) 22.92%,
+    #7334ea 100%
+  );
+  filter: drop-shadow(0px 20px 67px rgba(0, 0, 0, 0.08));
+  border-radius: 20px;
+}
+
+.auth-form {
+  /* width: 596px; */
   box-sizing: border-box;
   background: radial-gradient(
     75.42% 75.42% at 50% 42.37%,
@@ -91,35 +111,55 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg width='22' height='20' viewBox='0 0 22 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M15.95 0C14.036 0 12.199 0.882834 11 2.26703C9.801 0.882834 7.964 0 6.05 0C2.662 0 0 2.6267 0 5.99455C0 10.1035 3.74 13.4714 9.405 18.5613L11 20L12.595 18.5613C18.26 13.4714 22 10.1035 22 5.99455C22 2.6267 19.338 0 15.95 0Z' fill='%23BCEC30'/%3E%3C/svg%3E");
 }
 
-.add-form {
+.add-form, 
+.auth-form {
   padding: 20px;
   margin-top: 48px;
   display: flex;
   flex-direction: column;
 }
 
-.add-form-name,
-.add-form-text {
+.input-form,
+.textArea-form {
   font-size: 16px;
   font-family: Helvetica;
   border-radius: 8px;
   border: none;
 }
 
-.add-form-name {
+.input-form {
   width: 300px;
   padding: 11px 22px;
 }
 
-.add-form-text {
+.input-form:disabled {
+  color: white;
+}
+
+.textArea-form {
   margin-top: 12px;
   padding: 22px;
   resize: none;
 }
 
+.textArea-form_pass {
+  margin-top: 12px;
+  padding: 11px 22px;
+  resize: none;
+  font-size: 16px;
+  font-family: Helvetica;
+  border-radius: 8px;
+  border: none;
+  width: 300px;
+}
+
 .add-form-row {
   display: flex;
   justify-content: flex-end;
+}
+
+.add-form-row--center {
+  justify-content: center;
 }
 
 .add-form-button {
@@ -144,8 +184,14 @@ body {
   opacity: 1;
 }
 
+.input-form,
+.textArea-form,
+.textArea-form_pass {
+  border: 2px solid transparent;
+}
+
 .error {
-  border:1px solid red;
+  border: 2px solid red;
 }
 
 .hidden {
