@@ -1,5 +1,6 @@
 import { API } from "./api.js";
 import { getDate } from "./util.js";
+import { format } from "date-fns";
 
 export const DOM = {
     container: document.querySelector('.container'),
@@ -27,7 +28,7 @@ export const DOM = {
 
                     return {
                         name: comment.author.name,
-                        date: getDate(dateFromServer),
+                        date: format(dateFromServer, "yyyy-MM-dd hh.mm.ss"),
                         comment: comment.text,
                         likes: comment.likes,
                         isLiked: comment.isLiked,
